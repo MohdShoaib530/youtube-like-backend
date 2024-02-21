@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon ./src/index.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules ./src/index.js"
   },
   "keywords": [
     "youtube",
@@ -28,6 +28,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.1.2",
     "mongoose-aggregate-paginate-v2": "^1.0.7",
+    "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1"
   }
 }
