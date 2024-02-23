@@ -18,13 +18,13 @@ const userSchema = new Schema(
             required: true,
             unique: true,
             lowercase: true,
-            trim: true
+            trim: true,
+            index: true
         },
         fullName: {
             type:String,
             required: true,
             lowercase: true,
-            index: true
         },
         avatar: {
             type: String,  // clooudinary url
@@ -56,8 +56,8 @@ userSchema.pre("save", async function (next){
     next()
 })
 
-userSchema.methods.isPasswordCorrct = async function (password){
-    await bcrypt.compare(password,this.password)
+userSchema.methods.isPasswordCorrect = async function (password){
+    return await bcrypt.compareSync(password,this.password)
 }
 
 userSchema.methods.generateAccessToken = function (){
