@@ -5,21 +5,21 @@ import uploadOnCloudinary from '../utils/cloudinary.js';
 import apiResponse from '../utils/apiResponse.js'
 
 const options = {
+    secure: process.env.NODE_ENV === 'production' ? true : false,
     httpOnly: true,
-    secure: true
 }
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
         const user = await User.findById(userId);
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
+        const accessToken =  user.generateAccessToken()
+        const refreshToken =  user.generateRefreshToken()
     
         user.refreshToken = refreshToken
     
         await user.save({validateBeforeSave: false});
 
-        return {accessToken, refreshToken}
+        return {accessToken, refreshToken};
 
     } catch (error) {
         throw new apiError(500, "something went wrong while generating refresh and access token")
@@ -86,9 +86,7 @@ const registerUser = asyncHandler( async (req, res) => {
         username: username.toLowerCase()
     })
 
-    const createdUser = await User.findById(user._id).select(
-        "-password -refreshToken"
-    )
+    const createdUser = await User.findById(user._id)
 
     if (!createdUser) {
         throw new apiError(500, "Something went wrong while registering the user")
@@ -102,7 +100,6 @@ const registerUser = asyncHandler( async (req, res) => {
 
 const loginUser = asyncHandler( async (req, res, next) => {
     const {username, email, password} = req.body;
-    console.log('userreq',username, email, password);
 
     if(!username && !email){
         throw new apiError(401,"username or email is required !")
@@ -113,8 +110,7 @@ const loginUser = asyncHandler( async (req, res, next) => {
             { email },
             { username }
         ]
-    });
-    console.log("user",user);
+    }).select("+password")
 
     if(!user){
         throw new apiError(404,"OOPS!! User does not exists !")
@@ -127,10 +123,10 @@ const loginUser = asyncHandler( async (req, res, next) => {
         throw new apiError(404,"Password does not match")
     };
 
-    const {accessToken, refreshToken} = generateAccessAndRefreshToken(user._id)
+    const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id)
+    console.log('acc',accessToken,'ref',refreshToken);
 
     const loggedInUser = await User.findById(user._id)
-    .select("-password -refreshToken")
 
     return  res
                 .status(200)
