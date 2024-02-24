@@ -180,7 +180,7 @@ const refreshAccessToken = asyncHandler(async (req,res,next) => {
     try {
         const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
     
-        if(incomingRefreshToken){
+        if(!incomingRefreshToken){
             throw new apiError(401,"Unauthorized request")
         };
     
@@ -216,6 +216,8 @@ const refreshAccessToken = asyncHandler(async (req,res,next) => {
         throw new apiError(401,error?.message || "Invalid request")
     }
 })
+
+
 
 export {
     registerUser,
