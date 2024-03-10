@@ -214,19 +214,21 @@ const refreshAccessToken = asyncHandler(async (req,res,next) => {
     }
 });
 
-const changeCurrentUserPassword = asyncHandler(async (req,res) => {
+const changeCurrentUserPassword = asyncHandler(async (req,res, next) => {
     const {oldPassword , newPassword} = req.body;
+    console.log('old',oldPassword,'new',newPassword);
 
     if(!(oldPassword && newPassword)){
-        throw new apiError(401,'oldPassword and newPassword are required to change the passord');
+        throw next(new apiError(401,'oldPassword and newPassword are required to change the passord'));
     }
 
-    const user = await User.findById(req.user?._id);
+    const user = await User.findById(req.user?._id).select('+password');
 
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    console.log('ispas',isPasswordCorrect);
 
     if(!isPasswordCorrect){
-        throw new apiError(400,'Invalid old password');
+        throw next(new apiError(400,'Invalid old password'));
     }
 
     user.password = newPassword;
@@ -239,7 +241,7 @@ const changeCurrentUserPassword = asyncHandler(async (req,res) => {
         );
 });
 
-const  getCurrentUser = asyncHandler(async (req,res) => {
+const  currentUserDetails = asyncHandler(async (req,res) => {
     return res
         .status(200)
         .json(
@@ -465,7 +467,7 @@ export {
     logoutUser,
     refreshAccessToken,
     changeCurrentUserPassword,
-    getCurrentUser,
+    currentUserDetails,
     updateAccountDetails,
     updateUserAvatar,
     updateCoverImage,
