@@ -27,8 +27,12 @@ const userSchema = new Schema(
             lowercase: true
         },
         avatar: {
-            type: String,  // clooudinary url
-            required: true
+            public_id: {
+                type: String
+            },
+            secure_url: {
+                type: String
+            }
         },
         coverImage: {
             type: String

@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable no-unused-vars */
+import { v2 } from 'cloudinary';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
@@ -36,7 +37,10 @@ const registerUser = asyncHandler( async (req, res, next) => {
 
     const user = await User.create({
         fullName,
-        avatar: 'https://res.cloudinary.com/du9jzqlpt/image/upload/v1674647316/avatar_drzgxv.jpg',
+        avatar: {
+            public_id: email,
+            secure_url: 'https://res.cloudinary.com/du9jzqlpt/image/upload/v1674647316/avatar_drzgxv.jpg'
+        },
         coverImage: '',
         email,
         password,
@@ -67,7 +71,8 @@ const registerUser = asyncHandler( async (req, res, next) => {
 
             const avatar = await uploadOnCloudinary(avatarLocalPath);
             if(avatar){
-                createdUser.avatar = avatar?.url;
+                createdUser.avatar.public_id = avatar?.public_id;
+                createdUser.avatar.secure_url = avatar?.secure_url;
             }
 
             const coverImage = await uploadOnCloudinary(coverImageLocalPath);
@@ -253,7 +258,7 @@ const updateAccountDetails = asyncHandler (async (req,res) => {
     const {fullName, email} = req.body;
 
     if(!(fullName && email)){
-        throw new apiError(401,'all fields are required');
+        throw next(new apiError(401,'all fields are required'));
     }
 
     const user = await User.findByIdAndUpdate(
@@ -280,31 +285,34 @@ const updateUserAvatar = asyncHandler(async(req,res) => {
     const avatarLocalPath = req.file?.path;
 
     if(!avatarLocalPath){
-        throw new apiError(401,'Avatar file is missing');
+        throw next(new apiError(401,'Avatar file is missing'));
     }
+
+    const user = await User.findById(req.user?._id);
+    await v2.uploader.destroy(user.avatar.public_id);
 
     const avatar = await uploadOnCloudinary(avatarLocalPath);
 
-    if(!avatar.url){
-        throw new apiError(400,'Error while uploading on cloudinary');
+    if (!avatar.url) {
+        throw next(new apiError(400, 'Error while uploading on cloudinary'));
     }
-
-    const user = await User.findByIdAndUpdate(
+    const userUpdated = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                avatar: avatar.url
+                'avatar.public_id': avatar.public_id,
+                'avatar.secure_url': avatar.secure_url
             }
         },
         {
-            new : true
+            new: true
         }
     );
 
     return res
         .status(200)
         .json(
-            new apiResponse(200, user, 'User avatar updated successfully')
+            new apiResponse(200, userUpdated, 'User avatar updated successfully')
         );
 });
 const updateCoverImage = asyncHandler(async(req,res) => {
