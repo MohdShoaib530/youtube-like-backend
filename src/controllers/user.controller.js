@@ -9,48 +9,21 @@ import apiError from '../utils/apiError.js';
 import apiResponse from '../utils/apiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import uploadOnCloudinary from '../utils/cloudinary.js';
+import generateTokens from '../utils/generateTokens.js';
 
 const options = {
     secure: process.env.NODE_ENV === 'production' ? true : false,
     httpOnly: true
 };
 
-const generateAccessAndRefreshToken = async (userId) => {
-    try {
-        const user = await User.findById(userId);
-        const accessToken =  user.generateAccessToken();
-        const refreshToken =  user.generateRefreshToken();
-
-        user.refreshToken = refreshToken;
-
-        await user.save({validateBeforeSave: false});
-
-        return {accessToken, refreshToken};
-
-    } catch (error) {
-        throw new apiError(500, 'something went wrong while generating refresh and access token');
-    }
-};
-
-const registerUser = asyncHandler( async (req, res) => {
-    // get user details from frontend
-    // validation - not empty
-    // check if user already exists: username, email
-    // check for images, check for avatar
-    // upload them to cloudinary, avatar
-    // create user object - create entry in db
-    // remove password and refresh token field from response
-    // check for user creation
-    // return res
-
+const registerUser = asyncHandler( async (req, res, next) => {
 
     const {fullName, email, username, password } = req.body;
-    //console.log("email: ", email);
 
     if (
         [fullName, email, username, password].some((field) => field?.trim() === '')
     ) {
-        throw new apiError(400, 'All fields are required');
+        throw next(new apiError(400, 'All fields are required'));
     }
 
     const existedUser = await User.findOne({
@@ -58,7 +31,7 @@ const registerUser = asyncHandler( async (req, res) => {
     });
 
     if (existedUser) {
-        throw new apiError(409, 'User with email or username already exists');
+        throw next(new apiError(409, 'User with email or username already exists'));
     }
 
     const user = await User.create({
@@ -73,7 +46,7 @@ const registerUser = asyncHandler( async (req, res) => {
     const createdUser = await User.findById(user._id);
 
     if (!createdUser) {
-        throw new apiError(500, 'Something went wrong while registering the user');
+        throw next(new apiError(500, 'Something went wrong while registering the user'));
     }
 
     if(req.files?.avatar || req.files?.coverImage){
@@ -101,23 +74,28 @@ const registerUser = asyncHandler( async (req, res) => {
             if(coverImage){
                 createdUser.coverImage = coverImage?.url;
             }
+
         } catch (error) {
-            if(req.files?.avatar){
+            console.log('something went wrong while uploading images',error);
+            if(req.files?.avatar[0]?.path){
                 fs.unlinkSync(req.files.avatar[0].path);
             }
-            if(req.files?.coverImage){
+            if(req.files.coverImage[0].path){
                 fs.unlinkSync(req.files.coverImage[0].path);
             }
-            console.log('something went wrong while uploading images');
         }
 
     }
 
-    await createdUser.save();
+    const {accessToken, refreshToken} = await generateTokens(createdUser._id);
 
-    return res.status(201).json(
-        new apiResponse(200, createdUser, 'User registered Successfully')
-    );
+    return res
+        .status(201)
+        .cookie('accessToken',accessToken,options)
+        .cookie('refreshToken',refreshToken,options)
+        .json(
+            new apiResponse(200, createdUser, 'User registered Successfully')
+        );
 
 } );
 
@@ -125,7 +103,7 @@ const loginUser = asyncHandler( async (req, res, next) => {
     const {username, email, password} = req.body;
 
     if(!username && !email){
-        throw new apiError(401,'username or email is required !');
+        throw next(new apiError(401,'username or email is required !'));
     }
 
     const user = await User.findOne({
@@ -136,20 +114,22 @@ const loginUser = asyncHandler( async (req, res, next) => {
     }).select('+password');
 
     if(!user){
-        throw new apiError(404,'OOPS!! User does not exists !');
+        throw next(new apiError(404,'OOPS!! User does not exists !'));
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password);
-    console.log('passval',isPasswordValid);
+    console.log('passwordValidation',isPasswordValid);
 
     if(!isPasswordValid){
-        throw new apiError(404,'Password does not match');
+        throw next(new apiError(404,'Password does not match'));
     }
 
-    const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id);
-    console.log('acc',accessToken,'ref',refreshToken);
+    user.password = undefined;
 
-    const loggedInUser = await User.findById(user._id);
+    const {accessToken, refreshToken} = await generateTokens(user._id);
+    console.log('accessToken',accessToken,'refreshToken',refreshToken);
+
+    // const loggedInUser = await User.findById(user._id);
 
     return  res
         .status(200)
@@ -159,7 +139,7 @@ const loginUser = asyncHandler( async (req, res, next) => {
             new apiResponse(
                 200,
                 {
-                    user: loggedInUser,
+                    user: user,
                     refreshToken,
                     accessToken
                 },
@@ -218,7 +198,7 @@ const refreshAccessToken = asyncHandler(async (req,res,next) => {
             throw new apiError(401,'refreshToken is expired or used');
         }
 
-        const {newRefreshToken, accessToken} = await generateAccessAndRefreshToken(user?._id);
+        const {newRefreshToken, accessToken} = await generateTokens(user?._id);
 
         return res
             .status(200)

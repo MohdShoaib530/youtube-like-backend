@@ -31,9 +31,23 @@ app.use(cookieParser());
 
 app.use(morgan('dev'));
 
-// routers
+// Server Status Check Route
+app.get('/server', (_req, res) => {
+    res.send('wow! Server is working good');
+});
+
+// importing all routes
+import errorMiddleware from './middlewares/error.middleware.js';
 import userRouter from './routes/user.routes.js';
 
 app.use('/api/v1/users',userRouter);
+
+// Default catch all route - 404
+app.all('*', (_req, res) => {
+    res.status(404).send('OOPS!!! 404 Page Not Found');
+});
+
+// Custom error handling middleware
+app.use(errorMiddleware);
 
 export default app;
