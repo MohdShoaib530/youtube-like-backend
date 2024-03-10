@@ -24,11 +24,12 @@ const uploadOnCloudinary = async function(localFilePath){
             crop: 'fill'
         });
 
-        console.log('file uploaded on cloudinary', response.url);
+        console.log('file uploaded on cloudinary', response);
 
         fs.unlinkSync(localFilePath);
         return response;
     } catch (error) {
+        console.log('something went wrong while uploading on cloudinary',error);
         fs.unlinkSync(localFilePath);
         return null;
     }

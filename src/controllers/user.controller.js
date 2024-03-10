@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable no-unused-vars */
+import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 
@@ -59,33 +60,11 @@ const registerUser = asyncHandler( async (req, res) => {
     if (existedUser) {
         throw new apiError(409, 'User with email or username already exists');
     }
-    console.log(req.files);
-
-    const avatarLocalPath = req.files?.avatar[0]?.path;
-    //const coverImageLocalPath = req.files?.coverImage[0]?.path;
-
-    let coverImageLocalPath;
-    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-        coverImageLocalPath = req.files.coverImage[0].path;
-    }
-
-
-    if (!avatarLocalPath) {
-        throw new apiError(400, 'Avatar file is required');
-    }
-
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-    if (!avatar) {
-        throw new apiError(400, 'Avatar file is required');
-    }
-
 
     const user = await User.create({
         fullName,
-        avatar: avatar.url,
-        coverImage: coverImage?.url || '',
+        avatar: 'https://res.cloudinary.com/du9jzqlpt/image/upload/v1674647316/avatar_drzgxv.jpg',
+        coverImage: '',
         email,
         password,
         username: username.toLowerCase()
@@ -96,6 +75,45 @@ const registerUser = asyncHandler( async (req, res) => {
     if (!createdUser) {
         throw new apiError(500, 'Something went wrong while registering the user');
     }
+
+    if(req.files?.avatar || req.files?.coverImage){
+
+        try {
+
+            console.log('avatar and coverImage',req.files);
+
+            let avatarLocalPath;
+            if (req.files && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
+                avatarLocalPath = req.files.avatar[0].path;
+            }
+
+            let coverImageLocalPath;
+            if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+                coverImageLocalPath = req.files.coverImage[0].path;
+            }
+
+            const avatar = await uploadOnCloudinary(avatarLocalPath);
+            if(avatar){
+                createdUser.avatar = avatar?.url;
+            }
+
+            const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+            if(coverImage){
+                createdUser.coverImage = coverImage?.url;
+            }
+        } catch (error) {
+            if(req.files?.avatar){
+                fs.unlinkSync(req.files.avatar[0].path);
+            }
+            if(req.files?.coverImage){
+                fs.unlinkSync(req.files.coverImage[0].path);
+            }
+            console.log('something went wrong while uploading images');
+        }
+
+    }
+
+    await createdUser.save();
 
     return res.status(201).json(
         new apiResponse(200, createdUser, 'User registered Successfully')
