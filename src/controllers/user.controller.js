@@ -163,11 +163,6 @@ const logoutUser = asyncHandler( async (req,res,next) => {
         }
     );
 
-    const options = {
-        httpOnly: true,
-        secure: true
-    };
-
     return  res
         .status(200)
         .clearCookie('refreshToken',options)
