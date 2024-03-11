@@ -77,7 +77,8 @@ const registerUser = asyncHandler( async (req, res, next) => {
 
             const coverImage = await uploadOnCloudinary(coverImageLocalPath);
             if(coverImage){
-                createdUser.coverImage = coverImage?.url;
+                createdUser.coverImage.public_id = coverImage?.public_id;
+                createdUser.coverImage.secure_url = coverImage?.secure_url;
             }
 
         } catch (error) {
@@ -319,20 +320,24 @@ const updateCoverImage = asyncHandler(async(req,res) => {
     const coverImageLocalPath = req.file?.path;
 
     if(!coverImageLocalPath){
-        throw new apiError(401,'Avatar file is missing');
+        throw nexgt(new apiError(401,'Avatar file is missing'));
     }
+
+    const user = await User.findById(req.user?._id);
+    const destroy = await v2.uploader.destroy(user.avatar?.public_id);
 
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
     if(!coverImage.url){
-        throw new apiError(400,'Error while uploading on cloudinary');
+        throw next(new apiError(400,'Error while uploading on cloudinary'));
     }
 
-    const user = await User.findByIdAndUpdate(
+    const updatedUser = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                coverImage: coverImage.url
+                'coverImage.public_id': coverImage.public_id,
+                'coverImage.secure_url': coverImage.secure_url
             }
         },
         {
@@ -343,7 +348,7 @@ const updateCoverImage = asyncHandler(async(req,res) => {
     return res
         .status(200)
         .json(
-            new apiResponse(200, user, 'User coverImagew updated successfully')
+            new apiResponse(200, updatedUser, 'User coverImagew updated successfully')
         );
 });
 
