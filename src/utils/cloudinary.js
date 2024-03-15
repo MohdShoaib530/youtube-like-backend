@@ -20,7 +20,6 @@ const uploadOnCloudinary = async function(localFilePath){
             folder: 'youtube', // Save files in a folder named lms
             width: 250,
             height: 250,
-            gravity: 'faces', // This option tells cloudinary to center the image around detected faces (if any) after cropping or resizing the original image
             crop: 'fill'
         });
 
