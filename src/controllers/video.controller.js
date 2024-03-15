@@ -162,14 +162,47 @@ const updateVideo = asyncHandler(async (req, res) => {
 
 });
 
-const deleteVideo = asyncHandler(async (req, res) => {
+const deleteVideo = asyncHandler(async (req, res, next) => {
     const { videoId } = req.params;
+    try {
+        const video = await Video.findById(videoId);
+        const destroyThumbnail = await v2.uploader.destroy(video.thumbnail.public_id);
+        console.log('destroyThumbnail',destroyThumbnail);
+        const destroyVideo = await v2.uploader.destroy(video.videoFile.public_id);
+        console.log('destroyVideo',destroyVideo);
 
+        const destroyVideoFromDb = await Video.findByIdAndDelete(video?._id);
+
+        res
+            .status(200)
+            .json( new apiResponse(200,destroyVideoFromDb,'Video has been deleted from database'));
+
+
+    } catch (error) {
+        console.log('error',error);
+        throw next(new apiError(400,error.message || 'Something went wrong'));
+    }
 
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
+
+    const video = await Video.findByIdAndUpdate(
+        videoId,
+        {
+            isPublished: false
+        },
+        {
+            new: true
+        }
+    );
+
+    res
+        .status(200)
+        .json(new apiResponse(200,video,'publish has been toggeled'));
+
+
 });
 
 export {
