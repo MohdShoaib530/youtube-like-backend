@@ -1,11 +1,13 @@
 import { Router } from 'express';
 
-import { createTweet } from '../controllers/tweet.controller.js';
+import { createTweet, deleteTweet, getUserTweets, updateTweet } from '../controllers/tweet.controller.js';
 import { isLoggedIn } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
 router.use(isLoggedIn);
 router.route('/').post(createTweet);
+router.route('/user/:userId').get(getUserTweets);
+router.route('/:tweetId').patch(updateTweet).delete(deleteTweet);
 
 export default router;
