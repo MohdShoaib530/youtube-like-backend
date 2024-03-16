@@ -38,11 +38,13 @@ app.get('/server', (_req, res) => {
 
 // importing all routes
 import errorMiddleware from './middlewares/error.middleware.js';
+import tweetRouter from './routes/tweet.routes.js';
 import userRouter from './routes/user.routes.js';
 import videoRouter from './routes/video.routes.js';
 
 app.use('/api/v1/users',userRouter);
 app.use('/api/v1/video',videoRouter);
+app.use('/api/v1/tweets',tweetRouter);
 
 // Default catch all route - 404
 app.all('*', (_req, res) => {

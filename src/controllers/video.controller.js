@@ -110,6 +110,13 @@ const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     console.log('videoid',videoId);
 
+    // Validate videoId using isValidObjectId
+    if (!isValidObjectId(videoId)) {
+        return res
+            .status(200)
+            .json(new apiResponse(200,'invalid objectId'));
+    }
+
     const video = await Video.findById(videoId);
     console.log('video',video);
 
