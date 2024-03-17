@@ -30,6 +30,22 @@ const createPlaylist = asyncHandler(async (req, res, next) => {
 
 });
 const getPlaylistById = asyncHandler(async (req, res, next) => {
+    const { playlistId } = req.params;
+
+    if(!playlistId){
+        throw next(new apiError(400,'playlistId must be provided'));
+    }
+
+    const playlist = await Playlist.findById(playlistId).populate('videos');
+
+    if(!playlist){
+        throw next(new apiError(500,'No playlist found in the database'));
+    }
+
+    res
+        .status(200)
+        .json(new apiResponse(200,playlist,'playlist fetched successfully'));
+
 
 });
 const updatePlaylist = asyncHandler(async (req, res, next) => {
