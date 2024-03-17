@@ -49,9 +49,50 @@ const getPlaylistById = asyncHandler(async (req, res, next) => {
 
 });
 const updatePlaylist = asyncHandler(async (req, res, next) => {
+    const { playlistId } = req.params;
+    const { name, videos, description} = req.body;
 
+    if(!playlistId){
+        throw next(new apiError(400,'playList Id is required to get the playlist'));
+    }
+
+    const playlist = await Playlist.findByIdAndUpdate(
+        playlistId,
+        {
+            name,
+            videos,
+            description
+        },
+        {
+            new: true
+        }
+    );
+
+    if(!playlist){
+        throw next( new apiError(500,'no such playlist is availble in the db'));
+    }
+
+    res
+        .status(200)
+        .json(new apiResponse(200,playlist,'playlist fetched sucessfully'));
 });
 const deletePlaylist = asyncHandler(async (req, res, next) => {
+    const { playlistId } = req.params;
+
+    if(!playlistId){
+        throw next(new apiError(400,'playListId is required ot delete the playlist'));
+    }
+
+    const playlistDelete = await Playlist.findByIdAndDelete(playlistId);
+
+    if(!playlistDelete){
+        throw next(new apiError(500,'unable to delete the playlist now'));
+    }
+
+    res
+        .status(200)
+        .json(new apiResponse(200,playlistDelete,'playlist has been deleted'));
+
 
 });
 const addVideoToPlaylist = asyncHandler(async (req, res, next) => {
