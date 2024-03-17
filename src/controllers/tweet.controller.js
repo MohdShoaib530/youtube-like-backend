@@ -1,5 +1,4 @@
 import Tweet from '../models/tweet.model.js';
-import User from '../models/user.model.js';
 import apiError from '../utils/ApiError.js';
 import apiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';

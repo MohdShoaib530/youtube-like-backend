@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 // Error handling middleware
 
-import apiError from '../utils/apiError.js';
+import apiError from '../utils/ApiError.js';
 
 const errorMiddleware = (err, _req, res, _next) => {
     if (err instanceof apiError) {
