@@ -38,6 +38,7 @@ app.get('/server', (_req, res) => {
 
 // importing all routes
 import errorMiddleware from './middlewares/error.middleware.js';
+import likeRouter from './routes/like.routes.js';
 import playListRouter from './routes/playlist.routes.js';
 import tweetRouter from './routes/tweet.routes.js';
 import userRouter from './routes/user.routes.js';
@@ -47,6 +48,7 @@ app.use('/api/v1/users',userRouter);
 app.use('/api/v1/video',videoRouter);
 app.use('/api/v1/tweets',tweetRouter);
 app.use('/api/v1/playlist',playListRouter);
+app.use('/api/v1/likes',likeRouter);
 
 // Default catch all route - 404
 app.all('*', (_req, res) => {
