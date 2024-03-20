@@ -39,11 +39,20 @@ const toggleCommentLike = asyncHandler( async(req, res, next) => {
         .json(200,deleteLike,'like has been deleted');
 });
 const toggleTweetLike = asyncHandler( async(req, res, next) => {
-    const tweetToggle  = await Like.aggregate([
-        {
+    const tweetId = req.params;
 
-        }
-    ]);
+    if(!tweetId){
+        throw next( new apiError(400,'tweetId is required to toggle the tweet'));
+    }
+    const tweetToggle  = await Like.findOneAndDelete({$and: [{video: videoId,likedBy: req.user?._id}]});
+
+    if(!tweetToggle){
+        throw next( new apiError(500,'Something went wrong while toggling the tweet from db'));
+    }
+
+    res
+        .status(200)
+        .json(new apiResponse(200,tweetToggle,'tweet has been toggled'));
 });
 const toggleVideoLike = asyncHandler( async(req, res, next) => {
     const userId = req.user?._id;
