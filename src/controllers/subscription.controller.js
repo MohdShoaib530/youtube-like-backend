@@ -1,8 +1,8 @@
-import { Subscription } from '../models/subscription.model';
-import apiError from '../utils/ApiError';
+import { Subscription } from '../models/subscription.model.js';
+import apiError from '../utils/ApiError.js';
 import apiResponse from '../utils/ApiResponse.js';
 import ApiResponse from '../utils/ApiResponse.js';
-import asyncHandler from '../utils/asyncHandler';
+import asyncHandler from '../utils/asyncHandler.js';
 
 const getSubscribedChannels = asyncHandler(async(req, res, next) => {
 

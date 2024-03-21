@@ -5,10 +5,10 @@ import {
     getUserChannelSubscribers,
     toggleSubscription
 } from '../controllers/subscription.controller.js';
+const router = Router();
 import { isLoggedIn } from '../middlewares/auth.middleware.js';
 router.use(isLoggedIn); // Apply verifyJWT middleware to all routes in this file
 
-const router = Router();
 
 router
     .route('/c/:channelId')

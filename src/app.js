@@ -38,8 +38,11 @@ app.get('/server', (_req, res) => {
 
 // importing all routes
 import errorMiddleware from './middlewares/error.middleware.js';
+import dashboardRouter from './routes/dashboard.routes.js';
+import healthcheckRouter from './routes/healthcheck.routes.js';
 import likeRouter from './routes/like.routes.js';
 import playListRouter from './routes/playlist.routes.js';
+import subscriptionRouter from './routes/subscription.routes.js';
 import tweetRouter from './routes/tweet.routes.js';
 import userRouter from './routes/user.routes.js';
 import videoRouter from './routes/video.routes.js';
@@ -49,6 +52,11 @@ app.use('/api/v1/video',videoRouter);
 app.use('/api/v1/tweets',tweetRouter);
 app.use('/api/v1/playlist',playListRouter);
 app.use('/api/v1/likes',likeRouter);
+app.use('/api/v1/healthcheck', healthcheckRouter);
+app.use('/api/v1/subscriptions', subscriptionRouter);
+app.use('/api/v1/dashboard', dashboardRouter);
+
+
 
 // Default catch all route - 404
 app.all('*', (_req, res) => {

@@ -12,7 +12,7 @@ import {isLoggedIn} from '../middlewares/auth.middleware.js';
 import {upload} from '../middlewares/multer.middleware.js';
 
 const router = Router();
-//router.use(isLoggedIn); // Apply isLoggedIn middleware to all routes in this file
+router.use(isLoggedIn); // Apply isLoggedIn middleware to all routes in this file
 
 router
     .route('/')

@@ -62,6 +62,7 @@ const getAllVideos = asyncHandler(async (req, res, next) => {
 
 const publishAVideo = asyncHandler(async (req, res, next) => {
     const { title, description} = req.body;
+    console.log('userid',req.user?._id);
 
     if(!title || !description){
         throw next(new apiError(400,'title and description both are required'));
